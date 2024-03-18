@@ -2,7 +2,7 @@
 
 **Convenience classes to interact with Bedrock Foundation Models**
 
-Bedrock provides a unified API to invoke foundation models in the form of `bedrock.invoke_model()` and `bedrock.invoke_model_with_response_stream()`. These unified methods require a `modelId` and a stringified JSON `body` containing the model specific input parameters. Additional parameters, such as `accept`, and `contentType` can also be specified.
+Amazon Bedrock provides a unified API to invoke foundation models in the form of `bedrock.invoke_model()` and `bedrock.invoke_model_with_response_stream()`. These unified methods require a `modelId` and a stringified JSON `body` containing the model specific input parameters. Additional parameters, such as `accept`, and `contentType` can also be specified.
 
 This simplicity comes at the cost that developers need to know the model specific format of the `body` payload. Moreover, the payloads being completely different, does not allow to easy swapping out a model for another. Another disadvantage is that the generic `body` cannot be type annotated and the developer cannot therefore take advantage of IDE autocompletion features.
 
