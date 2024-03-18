@@ -1,0 +1,5 @@
+__pycache__
+*.pyc
+src/bedrock_fm/__init__.py
+.DS_Store
+dist

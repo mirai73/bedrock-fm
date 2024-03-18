@@ -1,0 +1,37 @@
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "bedrock_fm"
+version = "0.4.8"
+authors = [ "Massimiliano Angelino" ]
+description = "A package to simplify interaction with Bedrock Foundation models"
+readme = "README.md"
+license = "MIT"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[tool.poetry.dependencies]
+boto3 = ">=1.28.57"
+botocore = ">=1.31.57"
+python = ">=3.9"
+attrs = "^23.1.0"
+pillow = "^10.1.0"
+
+[tool.poetry.group.test.dependencies]
+pytest = "^6.0.0"
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.27.1"
+
+
+[tool.poetry.group.docs.dependencies]
+pdoc = {version = "^14.1.0", optional = true}
+
+[project.urls]
+"Homepage" = "https://github.com/aws-samples"
+"Bug Tracker" = "https://github.com/aws-samples"
