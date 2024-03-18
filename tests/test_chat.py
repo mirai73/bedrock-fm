@@ -41,3 +41,4 @@ def test_chat():
     r = fm.chat([System("You are an helpful assistant"), Human("What is your name?")])
     assert type(r) == list
     assert type(r[0]) == str
+    assert len(r[0]) > 0

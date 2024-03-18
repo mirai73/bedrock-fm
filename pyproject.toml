@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "bedrock_fm"
-version = "0.4.9"
+version = "0.4.10"
 authors = [ "Massimiliano Angelino" ]
 description = "A package to simplify interaction with Bedrock Foundation models"
 readme = "README.md"

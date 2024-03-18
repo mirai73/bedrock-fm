@@ -204,7 +204,7 @@ class Claude3(BedrockFoundationModel):
     def get_text(self, body: Dict[str, Any]) -> str:
         if body["type"] == "content_block_delta":
             return body["delta"]["text"]
-        elif body["type"] == "content":
+        elif body["type"] == "message":
             return body["content"][0]["text"]
         else:
             return ""
