@@ -202,8 +202,8 @@ print(emb.generate(["Tell me a joke"])[0])
 from bedrock_fm import from_model_id
 
 emb = from_model_id("cohere.embed-english-v3")
-print(emb.generate_documents(["Paris is in France", "Rome is in Italy", "Paris is also called Ville Lumiere"]))
-print(emb.generate_query("Where is Paris?"))
+print(emb.generate_for_documents(["Paris is in France", "Rome is in Italy", "Paris is also called Ville Lumiere"]))
+print(emb.generate_for_query("Where is Paris?"))
 ```
 
 ## Image generation

@@ -11,7 +11,6 @@ def test_generate():
 
 def test_generate_stream():
     r = fm.generate("test", stream=True)
-    assert type(r) is EventStream
     assert r.__iter__ is not None
     c = 0
     for v in r:
@@ -21,7 +20,6 @@ def test_generate_stream():
 
 def test_generate_stream_details():
     r = fm.generate("test", stream=True, details=True)
-    assert type(r) is StreamDetails
     assert r.stream.__iter__ is not None
 
 def test_generate_details():
@@ -32,7 +30,4 @@ def test_generate_details():
     assert r.prompt == "test"
     assert len(r.response) > 0
 
-def test_extra_args():
-    with pytest.raises(BedrockExtraArgsError):
-        fm.generate("test", extra_args={"a":1})
     

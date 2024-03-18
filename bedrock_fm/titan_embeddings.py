@@ -14,7 +14,7 @@ class TitanEmbeddings(BedrockEmbeddingsModel):
     def get_body(self, data: List[str], type: EmbeddingType) -> str:
         if len(data) != 1:
             raise BedrockArgsError(
-                "Titan embeddings do not support batch inference. Provide a single element array as input."
+                f"Titan embeddings do not support batch inference. Provide a single element array as input. {data}"
             )
         return json.dumps({"inputText": data[0]})
 

@@ -1,4 +1,4 @@
-from bedrock_fm import Jurassic
+from bedrock_fm import Jurassic, Penalty
 from bedrock_fm.exceptions import BedrockExtraArgsError
 import pytest
 
@@ -14,5 +14,6 @@ def test_args_extra():
 
 
 def test_args_unsupported():
-    with pytest.raises(BedrockExtraArgsError):
-        fm.generate("hello", extra_args={"topK": 10})
+    r = fm.generate("hello", count_penalty=Penalty(scale=1, apply_to_whitespaces=True))
+    assert type(r) is list
+    assert len(r[0]) > 0

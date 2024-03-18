@@ -3,8 +3,6 @@
 The `bedrock_fm` library exposes a separate class for each of the Bedrock models, with an simpler `generate()` API which is common across all models. The same method can be used to get a stream instead of a full completion by passing the `stream=True` as parameter. To obtain a detailed response including the original prompt, the body passed to the `invoke_*` method and timing information you can pass the parameter `details=True`. The API is fully typed, including the different return types based on the `stream` and `details` parameters values. 
 
 The output generation can be tuned with the optional `temperature`, `top_p` and `stop_words` parameters which can be passed at the instance creation time (in the class constructor) and overridden at generation time in the `generate` method.
-
-
 """
 
 from .amazon import (
@@ -12,9 +10,10 @@ from .amazon import (
     TitanImageGeneration,
     TitanImageVariation,
     TitanImageInPainting,
+    TitanImageOutPainting,
 )
 from .anthropic import Claude, Claude3
-from .ai21 import Jurassic
+from .ai21 import Jurassic, Penalty
 from .cohere import Command
 from .meta import Llama2Chat
 from .cohere_embeddings import Embed
@@ -26,6 +25,7 @@ from .bedrock import (
     CompletionDetails,
     BedrockFoundationModel,
     BedrockEmbeddingsModel,
+    EmbeddingType,
 )
 from .bedrock_image import BedrockImageModel
 from attrs import field
@@ -37,6 +37,7 @@ __all__ = [
     "TitanImageGeneration",
     "TitanImageVariation",
     "TitanImageInPainting",
+    "TitanImageOutPainting",
     "Claude",
     "Claude3",
     "Jurassic",
@@ -57,6 +58,7 @@ __all__ = [
     "Human",
     "Assistant",
     "System",
+    "EmbeddingType",
 ]
 
 

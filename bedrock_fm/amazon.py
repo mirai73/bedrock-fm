@@ -1,5 +1,6 @@
 from typing import Any, Dict, List, Tuple, Optional
-from .bedrock import BedrockFoundationModel
+from enum import Enum
+from .bedrock import BedrockFoundationModel, Model
 from .bedrock_image import BedrockImageModel
 from .exceptions import BedrockExtraArgsError
 from PIL import Image
@@ -105,6 +106,10 @@ class TitanImageBase(BedrockImageModel):
 
 @define
 class TitanImageGeneration(TitanImageBase):
+    def __init__(self):
+        super().__init__()
+        self._model_id = Model.AMAZON_TITAN_IMAGE_GENERATOR_V1.value
+
     def get_body(
         self,
         prompts: List[Tuple],
@@ -113,7 +118,6 @@ class TitanImageGeneration(TitanImageBase):
         seed: int = 0,
         negative_prompt: Optional[str] = None,
         cfg_scale: int = 7.0,
-        quality: str = "standard",
         number_of_images: int = 1,
     ) -> str:
         body = {
@@ -129,7 +133,6 @@ class TitanImageGeneration(TitanImageBase):
         body["imageGenerationConfig"]["numberOfImages"] = number_of_images
         body["imageGenerationConfig"]["height"] = height
         body["imageGenerationConfig"]["width"] = width
-        body["imageGenerationConfig"]["quality"] = quality
         return json.dumps(body)
 
     def generate(
@@ -138,45 +141,56 @@ class TitanImageGeneration(TitanImageBase):
         height: int = 512,
         width: int = 512,
         seed: int = 0,
+        *,
         negative_prompt: Optional[str] = None,
         cfg_scale: int = 7.0,
-        quality: str = "standard",
         number_of_images: int = 1,
     ) -> List[Image.Image]:
-        return super().generate(
+        return super()._generate(
             prompts,
             height=height,
             width=width,
             seed=seed,
             negative_prompt=negative_prompt,
             cfg_scale=cfg_scale,
-            quality=quality,
             number_of_images=number_of_images,
         )
 
 
 @define
 class TitanImageVariation(TitanImageBase):
+    def __init__(self):
+        super().__init__()
+        self._model_id = Model.AMAZON_TITAN_IMAGE_GENERATOR_V1.value
+
     def get_body(
         self,
         prompts: List[Tuple],
         height: int = 512,
         width: int = 512,
         seed: int = 0,
+        *,
+        images: List[Image.Image],
         negative_prompt: Optional[str] = None,
-        image: Optional[Image.Image] = None,
         cfg_scale: int = 7.0,
-        quality: str = "standard",
         number_of_images: int = 1,
     ) -> str:
-        buffer = BytesIO()
-        image.save(buffer, format="png")
-        buf = buffer.getvalue()
+        if len(images) == 0:
+            raise ValueError(
+                "You need to provide at least one image for the parameter images="
+            )
+        b64_im = []
+        for im in images:
+            buffer = BytesIO()
+            im.save(buffer, format="png")
+            buf = buffer.getvalue()
+            b64_im.append(str(b64encode(buf), "ascii"))
+
         body = {
             "taskType": "IMAGE_VARIATION",
             "imageVariationParams": {
                 "text": prompts[0][0],
-                "images": [str(b64encode(buf), "ascii")],
+                "images": b64_im,
             },
             "imageGenerationConfig": {"seed": seed},
         }
@@ -187,37 +201,39 @@ class TitanImageVariation(TitanImageBase):
         body["imageGenerationConfig"]["numberOfImages"] = number_of_images
         body["imageGenerationConfig"]["height"] = height
         body["imageGenerationConfig"]["width"] = width
-        body["imageGenerationConfig"]["quality"] = quality
 
         return json.dumps(body)
 
     def generate(
         self,
         prompt: str,
-        image: Image.Image,
-        negative_prompt: Optional[str] = None,
         height: int = 512,
         width: int = 512,
         seed: int = 0,
+        *,
+        images: List[Image.Image],
+        negative_prompt: Optional[str] = None,
         cfg_scale: int = 7,
-        quality: str = "standard",
         number_of_images: int = 1,
     ) -> List[Image.Image]:
-        return super().generate(
+        return super()._generate(
             [(prompt,)],
             negative_prompt=negative_prompt,
             height=height,
             width=width,
             seed=seed,
-            image=image,
+            images=images,
             cfg_scale=cfg_scale,
-            quality=quality,
             number_of_images=number_of_images,
         )
 
 
 @define
 class TitanImageInPainting(TitanImageBase):
+    def __init__(self):
+        super().__init__()
+        self._model_id = Model.AMAZON_TITAN_IMAGE_GENERATOR_V1.value
+
     def get_body(
         self,
         prompts: List[Tuple],
@@ -229,7 +245,6 @@ class TitanImageInPainting(TitanImageBase):
         negative_prompt: Optional[str] = None,
         image: Optional[Image.Image] = None,
         cfg_scale: int = 7.0,
-        quality: str = "standard",
         number_of_images: int = 1,
     ) -> str:
         if mask_prompt == None and mask_image == None:
@@ -256,7 +271,6 @@ class TitanImageInPainting(TitanImageBase):
         body["imageGenerationConfig"]["numberOfImages"] = number_of_images
         body["imageGenerationConfig"]["height"] = height
         body["imageGenerationConfig"]["width"] = width
-        body["imageGenerationConfig"]["quality"] = quality
 
         if mask_prompt != None:
             body["inPaintingParams"]["maskPrompt"] = mask_prompt
@@ -272,18 +286,18 @@ class TitanImageInPainting(TitanImageBase):
     def generate(
         self,
         prompt: str,
+        height: int = 512,
+        width: int = 512,
+        seed: int = 0,
+        *,
         image: Image.Image,
         mask_image: Optional[Image.Image] = None,
         mask_prompt: Optional[str] = None,
         negative_prompt: Optional[str] = None,
-        height: int = 512,
-        width: int = 512,
-        seed: int = 0,
         cfg_scale: int = 7,
-        quality: str = "standard",
         number_of_images: int = 1,
     ) -> List[Image.Image]:
-        return super().generate(
+        return super()._generate(
             [(prompt,)],
             mask_image=mask_image,
             mask_prompt=mask_prompt,
@@ -293,30 +307,95 @@ class TitanImageInPainting(TitanImageBase):
             seed=seed,
             image=image,
             cfg_scale=cfg_scale,
-            quality=quality,
             number_of_images=number_of_images,
         )
 
 
-# {
-#   "modelId": "amazon.titan-image-generator-v1:0",
-#   "contentType": "application/json",
-#   "accept": "application/json",
-#   "body": "{
-#     "inPaintingParams": {
-#       "text": "change flowers to orange"
-#       "image": [
-#         "iVBORw0KGgoAAAANSUhEUgAABAAAAAQACAIAAADwf..."
-#       ]
-#     },
-#     "taskType": "IMAGE_VARIATION",
-#     "imageGenerationConfig": {
-#       "cfgScale": 8,
-#       "seed": 0,
-#       "quality": "standard",
-#       "width": 1024,
-#       "height": 1024,
-#       "numberOfImages": 3
-#     }
-#   }"
-# }
+class OutpaintingMode(Enum):
+    DEFAULT = "DEFAULT"
+    PRECISE = "PRECISE"
+
+
+@define
+class TitanImageOutPainting(TitanImageBase):
+    def __init__(self):
+        super().__init__()
+        self._model_id = Model.AMAZON_TITAN_IMAGE_GENERATOR_V1.value
+
+    def get_body(
+        self,
+        prompts: List[Tuple],
+        height: int = 512,
+        width: int = 512,
+        seed: int = 0,
+        mask_image: Optional[Image.Image] = None,
+        mask_prompt: Optional[str] = None,
+        negative_prompt: Optional[str] = None,
+        image: Optional[Image.Image] = None,
+        outpainting_mode: Optional[OutpaintingMode] = OutpaintingMode.DEFAULT,
+        cfg_scale: int = 7.0,
+        number_of_images: int = 1,
+    ) -> str:
+        if mask_prompt == None and mask_image == None:
+            raise BedrockExtraArgsError("You must provide a mask prompt or mask image")
+        if mask_prompt != None and mask_image != None:
+            raise BedrockExtraArgsError(
+                "You must provide either a mask prompt or a mask image"
+            )
+        buffer = BytesIO()
+        image.save(buffer, format="png")
+        buf = buffer.getvalue()
+        body = {
+            "taskType": "OUTPAINTING",
+            "outPaintingParams": {
+                "text": prompts[0][0],
+                "image": str(b64encode(buf), "ascii"),
+            },
+            "imageGenerationConfig": {"seed": seed},
+        }
+        if negative_prompt != None:
+            body["outPaintingParams"]["negativeText"] = negative_prompt
+
+        body["imageGenerationConfig"]["cfgScale"] = cfg_scale
+        body["imageGenerationConfig"]["numberOfImages"] = number_of_images
+        body["imageGenerationConfig"]["height"] = height
+        body["imageGenerationConfig"]["width"] = width
+        body["outPaintingParams"]["outPaintingMode"] = outpainting_mode.value
+
+        if mask_prompt != None:
+            body["outPaintingParams"]["maskPrompt"] = mask_prompt
+
+        if mask_image != None:
+            buffer = BytesIO()
+            image.save(buffer, format="png")
+            buf = buffer.getvalue()
+            body["outPaintingParams"]["maskImage"] = str(b64encode(buf), "ascii")
+
+        return json.dumps(body)
+
+    def generate(
+        self,
+        prompt: str,
+        height: int = 512,
+        width: int = 512,
+        seed: int = 0,
+        *,
+        image: Image.Image,
+        cfg_scale: int = 7,
+        number_of_images: int = 1,
+        mask_image: Optional[Image.Image] = None,
+        mask_prompt: Optional[str] = None,
+        negative_prompt: Optional[str] = None,
+    ) -> List[Image.Image]:
+        return super()._generate(
+            [(prompt,)],
+            mask_image=mask_image,
+            mask_prompt=mask_prompt,
+            negative_prompt=negative_prompt,
+            height=height,
+            width=width,
+            seed=seed,
+            image=image,
+            cfg_scale=cfg_scale,
+            number_of_images=number_of_images,
+        )

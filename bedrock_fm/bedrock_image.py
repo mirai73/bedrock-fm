@@ -41,7 +41,7 @@ class BedrockImageModel:
         model._model_id = model_id
         return model
 
-    def generate(
+    def _generate(
         self,
         prompts: List[Tuple],
         height: int = 512,

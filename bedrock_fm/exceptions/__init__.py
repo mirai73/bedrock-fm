@@ -1,6 +1,7 @@
 __all__ = [
     "BedrockExtraArgsError",
-    "BedrockInvalidModelError"
+    "BedrockInvalidModelError",
+    "BedrockArgsError"
 ]
 
 class BedrockExtraArgsError(Exception):

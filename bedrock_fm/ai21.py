@@ -3,7 +3,7 @@ from .exceptions import BedrockExtraArgsError
 import json
 from typing import List, Any, Dict, Optional, overload, Literal
 from botocore.eventstream import EventStream
-from attrs import define
+from attrs import define, field
 from typing import Iterable
 
 
@@ -12,11 +12,11 @@ class Penalty:
     """Penalty object"""
 
     scale: int
-    apply_to_whitespaces: bool
-    apply_to_punctuations: bool
-    apply_to_numbers: bool
-    apply_to_stopwords: bool
-    apply_to_emojis: bool
+    apply_to_whitespaces:bool = field(default=False)
+    apply_to_punctuations: bool = field(default=False)
+    apply_to_numbers: bool = field(default=False)
+    apply_to_stopwords: bool = field(default=False)
+    apply_to_emojis: bool = field(default=False)
 
     def to_dict(self):
         return {

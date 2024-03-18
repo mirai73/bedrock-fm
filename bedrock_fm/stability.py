@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Tuple, Optional
+from typing import Any, Dict, List, Tuple, Optional, overload
 
 from bedrock_fm.bedrock import Model
 from .bedrock_image import BedrockImageModel
@@ -23,25 +23,18 @@ resolutions = [
 ]
 
 
-SDStylePresets = Enum(
-    "SDStylePresets",
-    {
-        i.replace("-", "_").replace(".", "_").upper(): i
-        for i in [
-            "3d-model",
-            "analog-film",
-            "anime",
-            "cinematic",
-            "comic-book",
-            "digital-art",
-            "enhance",
-            "fantasy-art",
-            "isometric",
-            "line-art",
-            "low-poly",
-        ]
-    },
-)
+class SDStylePresets(Enum):
+    THREE_D_MODEL = "3d-model"
+    ANALOG_FILM = "analog-film"
+    ANIME = "anime"
+    CINEMATIC = "cinematic"
+    COMIC_BOOK = "comic-book"
+    DIGITAL_ART = "digital-art"
+    ENHANCE = "enhance"
+    FANTASY_ART = "fantasy-art"
+    ISOMETRIC = "isometric"
+    LINE_ART = "line-art"
+    LOW_POLY = "low-poly"
 
 
 @define
@@ -66,9 +59,6 @@ class SDXL(BedrockImageModel):
         width: int,
         height: int,
         seed: int,
-        # style_preset: SDStylePresets,
-        # clip_guidance_preset: str,
-        # cfg_scale: int,
         **kwargs,
     ) -> str:
         # if (width, height) not in resolutions:
@@ -98,29 +88,45 @@ class SDXL(BedrockImageModel):
 
         return json.dumps(body)
 
-    # def generate(
-    #     self,
-    #     prompts: List[Tuple],
-    #     height: int = 512,
-    #     width: int = 512,
-    #     seed: int = 1,
-    #     samples: int = 1,
-    #     sampler: Optional[str] = None,
-    #     steps: int = 50,
-    #     clip_guidance_preset: str = "NONE",
-    #     cfg_scale: int = 7,
-    # ) -> List[Image.Image]:
-    #     return super().generate(
-    #         prompts,
-    #         height,
-    #         width,
-    #         seed,
-    #         samples=samples,
-    #         sampler=sampler,
-    #         steps=steps,
-    #         cfg_scale=cfg_scale,
-    #         clip_guidance_preset=clip_guidance_preset,
-    #     )
+    def generate(
+        self,
+        prompts: List[Tuple],
+        height: int = 512,
+        width: int = 512,
+        seed: int = 1,
+        *,
+        samples: int = 1,
+        sampler: Optional[str] = None,
+        steps: int = 50,
+        style_preset: SDStylePresets = None,
+        clip_guidance_preset: str = "NONE",
+        cfg_scale: int = 7,
+    ) -> List[Image.Image]:
+        if style_preset:
+            return super()._generate(
+                prompts,
+                height,
+                width,
+                seed,
+                samples=samples,
+                sampler=sampler,
+                steps=steps,
+                cfg_scale=cfg_scale,
+                clip_guidance_preset=clip_guidance_preset,
+                style_preset=style_preset.value,
+            )
+        else:
+            return super()._generate(
+                prompts,
+                height,
+                width,
+                seed,
+                samples=samples,
+                sampler=sampler,
+                steps=steps,
+                cfg_scale=cfg_scale,
+                clip_guidance_preset=clip_guidance_preset,
+            )
 
     def get_images(self, resp: Dict[str, Any]) -> List[Image.Image]:
         body_json = json.loads(resp["body"].read())

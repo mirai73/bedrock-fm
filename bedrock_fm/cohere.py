@@ -11,13 +11,12 @@ class Command(BedrockFoundationModel):
     like text generation, summarization, copywriting, dialogue, extraction, and question answering.
 
     [Cohere Command](https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters.html#model-parameters-cohere)
-    models support the following `extra_args`:
+    models support the following arguments:
 
-        {
-            "k": float,
-            "return_likelihoods": "GENERATION|ALL|NONE",
-            "num_generations": int
-        }
+    "k": float,
+    "return_likelihoods": "GENERATION|ALL|NONE",
+    "num_generations": int
+
     """
 
     @classmethod
@@ -132,21 +131,27 @@ class Command(BedrockFoundationModel):
         self,
         prompt: str,
         *,
-        top_p: float,
-        temperature: float,
-        max_token_count: int,
-        stop_sequences: List[str],
-        return_likelihoods: str,
-        num_generations: int,
-        k: int,
-        details: Literal[False],
-        stream: Literal[False],
+        top_p: Optional[float] = None,
+        temperature: Optional[float] = None,
+        max_token_count: Optional[int] = None,
+        stop_sequences: Optional[List[str]] = None,
+        return_likelihoods: Optional[str] = None,
+        num_generations: Optional[int] = None,
+        k: Optional[int] = None,
+        details: Optional[Literal[False]]=False,
+        stream: Optional[Literal[False]]=False,
     ) -> List[str] | Iterable[str] | CompletionDetails | StreamDetails:
-        extra_args = {
-            "return_likelihoods": return_likelihoods,
-            "num_generations": num_generations,
-            "k": k,
-        }
+        
+        extra_args = {}
+        if return_likelihoods: 
+            extra_args["return_likelihoods"] = return_likelihoods
+        
+        if num_generations:
+            extra_args["num_generations"] = num_generations
+        
+        if k:
+            extra_args["k"] = k
+
         return super().generate(
             prompt,
             top_p=top_p,

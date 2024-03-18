@@ -202,4 +202,9 @@ class Claude3(BedrockFoundationModel):
         return [self.get_text(body)]
 
     def get_text(self, body: Dict[str, Any]) -> str:
-        return body["content"][0]["text"]
+        if body["type"] == "content_block_delta":
+            return body["delta"]["text"]
+        elif body["type"] == "content":
+            return body["content"][0]["text"]
+        else:
+            return ""
