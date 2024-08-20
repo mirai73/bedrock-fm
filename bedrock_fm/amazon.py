@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Tuple, Optional
 from enum import Enum
 from .bedrock import BedrockFoundationModel, Model
 from .bedrock_image import BedrockImageModel
-from .exceptions import BedrockExtraArgsError
+from .exceptions import BedrockExtraArgsError, BedrockArgsError
 from PIL import Image
 import json
 from attrs import define
@@ -74,6 +74,10 @@ class TitanImageBase(BedrockImageModel):
         return model_id.startswith(cls.family()) and "embed" not in model_id
 
     @classmethod
+    def from_id(cls, model_id: str | Model, **kwargs):
+        return super().from_id(model_id, **kwargs)
+
+    @classmethod
     def family(cls) -> str:
         return "amazon.titan-image"
 
@@ -108,7 +112,6 @@ class TitanImageBase(BedrockImageModel):
 class TitanImageGeneration(TitanImageBase):
     def __init__(self):
         super().__init__()
-        self._model_id = Model.AMAZON_TITAN_IMAGE_GENERATOR_V1.value
 
     def get_body(
         self,
@@ -161,7 +164,6 @@ class TitanImageGeneration(TitanImageBase):
 class TitanImageVariation(TitanImageBase):
     def __init__(self):
         super().__init__()
-        self._model_id = Model.AMAZON_TITAN_IMAGE_GENERATOR_V1.value
 
     def get_body(
         self,
@@ -232,7 +234,6 @@ class TitanImageVariation(TitanImageBase):
 class TitanImageInPainting(TitanImageBase):
     def __init__(self):
         super().__init__()
-        self._model_id = Model.AMAZON_TITAN_IMAGE_GENERATOR_V1.value
 
     def get_body(
         self,
@@ -320,7 +321,6 @@ class OutpaintingMode(Enum):
 class TitanImageOutPainting(TitanImageBase):
     def __init__(self):
         super().__init__()
-        self._model_id = Model.AMAZON_TITAN_IMAGE_GENERATOR_V1.value
 
     def get_body(
         self,
@@ -396,6 +396,212 @@ class TitanImageOutPainting(TitanImageBase):
             width=width,
             seed=seed,
             image=image,
+            cfg_scale=cfg_scale,
+            number_of_images=number_of_images,
+        )
+
+
+@define
+class TitanImageBackgroundRemoval(TitanImageBase):
+    def __init__(self):
+        super().__init__()
+
+    def get_body(
+        self,
+        prompts: List[Tuple],
+        height: int = 512,
+        width: int = 512,
+        seed: int = 0,
+        image: Image.Image = None,
+        cfg_scale: int = 7.0,
+    ) -> str:
+        buffer = BytesIO()
+        image.save(buffer, format="png")
+        buf = buffer.getvalue()
+        body = {
+            "taskType": "BACKGROUND_REMOVAL",
+            "backgroundRemovalParams": {
+                "image": str(b64encode(buf), "ascii"),
+            },
+            "imageGenerationConfig": {"seed": seed},
+        }
+
+        body["imageGenerationConfig"]["cfgScale"] = cfg_scale
+        body["imageGenerationConfig"]["height"] = height
+        body["imageGenerationConfig"]["width"] = width
+
+        return json.dumps(body)
+
+    def generate(
+        self,
+        prompt: str,
+        height: int = 512,
+        width: int = 512,
+        seed: int = 0,
+        *,
+        image: Image.Image,
+        cfg_scale: int = 7,
+    ) -> List[Image.Image]:
+        return super()._generate(
+            [(prompt,)],
+            height=height,
+            width=width,
+            seed=seed,
+            image=image,
+            cfg_scale=cfg_scale,
+        )
+
+
+class ControlMode(Enum):
+    CANNY_EDGE = "CANNY_EDGE"
+    SEGMENTATION = "SEGMENTATION"
+
+
+@define
+class TitanImageConditionedGeneration(TitanImageBase):
+    def __init__(self):
+        super().__init__()
+
+    @classmethod
+    def _validate_model_id(cls, model_id: str):
+        return model_id == Model.AMAZON_TITAN_IMAGE_GENERATOR_V2_0.value
+
+    def get_body(
+        self,
+        prompts: List[Tuple],
+        height: int = 512,
+        width: int = 512,
+        seed: int = 0,
+        condition_image: Optional[Image.Image] = None,
+        control_strength: Optional[float] = None,
+        control_mode: Optional[ControlMode] = None,
+        negative_prompt: Optional[str] = None,
+        cfg_scale: int = 7.0,
+        number_of_images: int = 1,
+    ) -> str:
+
+        body = {
+            "taskType": "TEXT_IMAGE",
+            "textToImageParams": {
+                "text": prompts[0][0],
+            },
+            "imageGenerationConfig": {"seed": seed},
+        }
+        if negative_prompt != None:
+            body["textToImageParams"]["negativeText"] = negative_prompt
+        if condition_image != None:
+            buffer = BytesIO()
+            condition_image.save(buffer, format="png")
+            buf = buffer.getvalue()
+            body["textToImageParams"]["conditionImage"] = str(b64encode(buf), "ascii")
+        if control_mode != None:
+            body["textToImageParams"]["controlMode"] = control_mode.value
+        if control_strength != None:
+            body["textToImageParams"]["controlStrength"] = control_strength
+
+        body["imageGenerationConfig"]["cfgScale"] = cfg_scale
+        body["imageGenerationConfig"]["numberOfImages"] = number_of_images
+        body["imageGenerationConfig"]["height"] = height
+        body["imageGenerationConfig"]["width"] = width
+
+        return json.dumps(body)
+
+    def generate(
+        self,
+        prompt: str,
+        height: int = 512,
+        width: int = 512,
+        seed: int = 0,
+        *,
+        condition_image: Optional[Image.Image] = None,
+        control_strength: Optional[float] = None,
+        control_mode: Optional[ControlMode] = None,
+        negative_prompt: Optional[str] = None,
+        cfg_scale: int = 7,
+        number_of_images: int = 1,
+    ) -> List[Image.Image]:
+        return super()._generate(
+            [(prompt,)],
+            condition_image=condition_image,
+            control_strength=control_strength,
+            control_mode=control_mode,
+            negative_prompt=negative_prompt,
+            height=height,
+            width=width,
+            seed=seed,
+            cfg_scale=cfg_scale,
+            number_of_images=number_of_images,
+        )
+
+
+@define
+class TitanImageColorGuidedContent(TitanImageBase):
+    def __init__(self):
+        super().__init__()
+
+    @classmethod
+    def _validate_model_id(cls, model_id: str):
+        return model_id == Model.AMAZON_TITAN_IMAGE_GENERATOR_V2_0.value
+
+    def get_body(
+        self,
+        prompts: List[Tuple],
+        height: int = 512,
+        width: int = 512,
+        seed: int = 0,
+        colors: list[str] = None,
+        reference_image: Optional[Image.Image] = None,
+        negative_prompt: Optional[str] = None,
+        cfg_scale: int = 7.0,
+        number_of_images: int = 1,
+    ) -> str:
+
+        body = {
+            "taskType": "COLOR_GUIDED_GENERATION",
+            "colorGuidedGenerationParams": {
+                "text": prompts[0][0],
+                "colors": colors,
+            },
+            "imageGenerationConfig": {"seed": seed},
+        }
+        if negative_prompt != None:
+            body["colorGuidedGenerationParams"]["negativeText"] = negative_prompt
+        if reference_image != None:
+            buffer = BytesIO()
+            reference_image.save(buffer, format="png")
+            buf = buffer.getvalue()
+            body["colorGuidedGenerationParams"]["referenceImage"] = str(
+                b64encode(buf), "ascii"
+            )
+
+        body["imageGenerationConfig"]["cfgScale"] = cfg_scale
+        body["imageGenerationConfig"]["numberOfImages"] = number_of_images
+        body["imageGenerationConfig"]["height"] = height
+        body["imageGenerationConfig"]["width"] = width
+
+        return json.dumps(body)
+
+    def generate(
+        self,
+        prompt: str,
+        height: int = 512,
+        width: int = 512,
+        seed: int = 0,
+        *,
+        colors: list[str] = None,
+        reference_image: Optional[Image.Image] = None,
+        negative_prompt: Optional[str] = None,
+        cfg_scale: int = 7,
+        number_of_images: int = 1,
+    ) -> List[Image.Image]:
+        return super()._generate(
+            [(prompt,)],
+            colors=colors,
+            reference_image=reference_image,
+            negative_prompt=negative_prompt,
+            height=height,
+            width=width,
+            seed=seed,
             cfg_scale=cfg_scale,
             number_of_images=number_of_images,
         )

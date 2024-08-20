@@ -1,8 +1,8 @@
-from bedrock_fm import TitanImageGeneration, Model
+from bedrock_fm import TitanImageConditionedGeneration, Model, ControlMode
 import json
 from PIL import Image
 
-fm = TitanImageGeneration.from_id(Model.AMAZON_TITAN_IMAGE_GENERATOR_V1)
+fm = TitanImageConditionedGeneration.from_id(Model.AMAZON_TITAN_IMAGE_GENERATOR_V2_0)
 
 
 def test_args():
@@ -22,7 +22,15 @@ def test_args():
 
 def test_gen():
     r = fm.generate(
-        [("hello", 1)], 512, 512, 0, negative_prompt="dogs", number_of_images=2
+        "hello",
+        512,
+        512,
+        0,
+        negative_prompt="dogs",
+        number_of_images=2,
+        condition_image=Image.new("RGB", (512, 512)),
+        control_mode=ControlMode.CANNY_EDGE,
+        control_strength=0.4,
     )
     assert type(r) == list
     assert len(r) == 2

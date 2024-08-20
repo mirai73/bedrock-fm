@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "bedrock_fm"
-version = "0.4.10"
+version = "0.4.11"
 authors = [ "Massimiliano Angelino" ]
 description = "A package to simplify interaction with Bedrock Foundation models"
 readme = "README.md"
@@ -17,11 +17,11 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-boto3 = ">=1.28.57"
-botocore = ">=1.31.57"
 python = ">=3.10"
 attrs = "^23.1.0"
 pillow = "^10.1.0"
+boto3 = "^1.35.1"
+botocore = "^1.35.1"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^6.0.0"

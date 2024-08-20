@@ -11,13 +11,18 @@ from .amazon import (
     TitanImageVariation,
     TitanImageInPainting,
     TitanImageOutPainting,
+    TitanImageConditionedGeneration,
+    TitanImageColorGuidedContent,
+    TitanImageBackgroundRemoval,
+    ControlMode,
+    OutpaintingMode,
 )
 from .anthropic import Claude, Claude3
 from .ai21 import Jurassic, Penalty
-from .cohere import Command
-from .meta import Llama2Chat
+from .cohere import Command, CommandR
+from .meta import Llama2Chat, Llama3Instruct
 from .cohere_embeddings import Embed
-from .mistral import Mistral, Mixtral
+from .mistral import Mistral, Mixtral, MistralLarge
 from .titan_embeddings import TitanEmbeddings
 from .stability import SDXL, SDStylePresets
 from .bedrock import (
@@ -30,7 +35,8 @@ from .bedrock import (
 from .bedrock_image import BedrockImageModel
 from attrs import field
 from .exceptions import BedrockInvalidModelError
-from .bedrock import Model, Human, Assistant, System
+from .bedrock import Human, Assistant, System
+from .model import Model
 
 __all__ = [
     "Titan",
@@ -38,6 +44,11 @@ __all__ = [
     "TitanImageVariation",
     "TitanImageInPainting",
     "TitanImageOutPainting",
+    "TitanImageConditionedGeneration",
+    "TitanImageColorGuidedContent",
+    "TitanImageBackgroundRemoval",
+    "ControlMode",
+    "OutpaintingMode",
     "Claude",
     "Claude3",
     "Jurassic",
@@ -47,10 +58,13 @@ __all__ = [
     "BedrockEmbeddingsModel",
     "BedrockImageModel",
     "Command",
+    "CommandR",
     "Embed",
     "Mistral",
     "Mixtral",
+    "MistralLarge",
     "Llama2Chat",
+    "Llama3Instruct",
     "SDXL",
     "SDStylePresets",
     "from_model_id",
@@ -103,15 +117,18 @@ def from_model_id(
     if type(model_id) == Model:
         model_id = model_id.value
 
-    if ":" in model_id or "-" not in model_id:
+    if "-" not in model_id:
         raise BedrockInvalidModelError(f"{model_id} is not a supported model")
     family = model_id.split("-")[0]
     if family == "amazon.titan" and "embed" in model_id:
         family += "-embed"  # Amazon Titan model naming workaround
-    if family == "meta.llama2" and "chat" in model_id:
-        family += "-chat"  # Llama2 Chat model naming workaround
     if family == "anthropic.claude" and "-3" in model_id:
         family += "-3"
+    if family == "cohere.command" and "-r" in model_id:
+        family += "-r"
+    if family == "mistral.mistral" and "-large" in model_id:
+        family += "-large"
+
     if family in __family_map:
         return __family_map[family].from_id(model_id, **kwargs)
     raise BedrockInvalidModelError(f"{model_id} is not a supported model")

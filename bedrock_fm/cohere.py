@@ -1,5 +1,14 @@
-from .bedrock import BedrockFoundationModel, CompletionDetails, StreamDetails
-from .exceptions import BedrockExtraArgsError
+from .bedrock import (
+    BedrockFoundationModel,
+    CompletionDetails,
+    StreamDetails,
+    Assistant,
+    BedrockFoundationModel,
+    Human,
+    System,
+    MessageRole,
+)
+from .exceptions import BedrockExtraArgsError, BedrockInvocationError
 import json
 from typing import List, Any, Dict, Iterable, Optional, overload, Literal
 from attrs import define
@@ -73,8 +82,7 @@ class Command(BedrockFoundationModel):
         k: int,
         details: Literal[True],
         stream: Literal[True],
-    ) -> StreamDetails:
-        ...
+    ) -> StreamDetails: ...
 
     @overload
     def generate(
@@ -90,8 +98,7 @@ class Command(BedrockFoundationModel):
         k: int,
         details: Literal[True],
         stream: Literal[False],
-    ) -> CompletionDetails:
-        ...
+    ) -> CompletionDetails: ...
 
     @overload
     def generate(
@@ -107,8 +114,7 @@ class Command(BedrockFoundationModel):
         k: int,
         details: Literal[False],
         stream: Literal[True],
-    ) -> Iterable[str]:
-        ...
+    ) -> Iterable[str]: ...
 
     @overload
     def generate(
@@ -124,8 +130,7 @@ class Command(BedrockFoundationModel):
         k: int,
         details: Literal[False],
         stream: Literal[False],
-    ) -> List[str]:
-        ...
+    ) -> List[str]: ...
 
     def generate(
         self,
@@ -138,17 +143,17 @@ class Command(BedrockFoundationModel):
         return_likelihoods: Optional[str] = None,
         num_generations: Optional[int] = None,
         k: Optional[int] = None,
-        details: Optional[Literal[False]]=False,
-        stream: Optional[Literal[False]]=False,
+        details: Optional[Literal[False]] = False,
+        stream: Optional[Literal[False]] = False,
     ) -> List[str] | Iterable[str] | CompletionDetails | StreamDetails:
-        
+
         extra_args = {}
-        if return_likelihoods: 
+        if return_likelihoods:
             extra_args["return_likelihoods"] = return_likelihoods
-        
+
         if num_generations:
             extra_args["num_generations"] = num_generations
-        
+
         if k:
             extra_args["k"] = k
 
@@ -175,3 +180,79 @@ class Command(BedrockFoundationModel):
                 return t
         else:
             return ""
+
+
+class CommandR(BedrockFoundationModel):
+
+    @classmethod
+    def family(cls) -> str:
+        return "cohere.command-r"
+
+    def validate_extra_args(self, extra_args: Dict[str, Any]) -> bool:
+        for k in list(extra_args.keys()):
+            if k not in [
+                "k",
+                "documents",
+                "search_queries_only",
+                "preamble",
+                "k",
+                "prompt_truncation",
+                "frequency_penalty",
+                "presence_penalty",
+                "seed",
+                "return_prompt",
+                "tools",
+                "tool_results",
+                "stop_sequences",
+                "raw_prompting",
+            ]:
+                raise BedrockExtraArgsError(
+                    f"Argument {k} not supported by Command-R models."
+                )
+        return True
+
+    def get_chat_prompt(
+        self, conversation: List[Human | Assistant | System]
+    ) -> str | list:
+        messages = []
+        for c in conversation:
+            if c.role == MessageRole.HUMAN:
+                messages.append({"role": "USER", "message": c.content})
+            elif c.role == MessageRole.ASSISTANT:
+                messages.append({"role": "CHATBOT", "message": c.content})
+        return messages
+
+    def get_body(
+        self,
+        prompt: str | dict,
+        top_p: float,
+        temperature: float,
+        max_token_count: int,
+        stop_sequences: List[str],
+        extra_args: Dict[str, Any],
+        stream: bool,
+    ) -> str:
+        body = extra_args.copy()
+        if isinstance(prompt, list):
+            body.update(extra_args)
+
+            body.update(
+                {
+                    "message": prompt[-1]["message"],
+                    "chat_history": prompt[:-1],
+                    "max_tokens": max_token_count,
+                    "p": top_p,
+                    "temperature": temperature,
+                }
+            )
+            return json.dumps(body)
+        else:
+            raise BedrockInvocationError(
+                "Command-R models do not support generate api."
+            )
+
+    def get_text(self, body: Dict[str, Any]) -> str:
+        return body["text"]
+
+    def process_response_body(self, body: Dict[str, Any]) -> List[str]:
+        return [body["text"]]
