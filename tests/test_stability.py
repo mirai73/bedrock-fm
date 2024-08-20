@@ -3,7 +3,7 @@ from bedrock_fm.exceptions import BedrockExtraArgsError
 import json
 from PIL import Image
 
-fm = SDXL.from_id(Model.STABILITY_STABLE_DIFFUSION_XL)
+fm = SDXL.from_id(Model.STABILITY_STABLE_DIFFUSION_XL_V1)
 
 
 def test_args():

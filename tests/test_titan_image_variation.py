@@ -1,8 +1,8 @@
-from bedrock_fm import TitanImageVariation
+from bedrock_fm import TitanImageVariation, Model
 import json
 from PIL import Image
 
-fm = TitanImageVariation()
+fm = TitanImageVariation.from_id(Model.AMAZON_TITAN_IMAGE_GENERATOR_V1)
 
 
 def test_args():
