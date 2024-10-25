@@ -18,7 +18,7 @@ from .amazon import (
     OutpaintingMode,
 )
 from .anthropic import Claude, Claude3
-from .ai21 import Jurassic, Penalty
+from .ai21 import Jurassic, Jamba
 from .cohere import Command, CommandR
 from .meta import Llama2Chat, Llama3Instruct
 from .cohere_embeddings import Embed
@@ -52,6 +52,7 @@ __all__ = [
     "Claude",
     "Claude3",
     "Jurassic",
+    "Jamba",
     "StreamDetails",
     "CompletionDetails",
     "BedrockFoundationModel",
@@ -87,6 +88,7 @@ __family_map = {
     Embed.family(): Embed,
     SDXL.family(): SDXL,
     Claude3.family(): Claude3,
+    Jamba.family(): Jamba,
 }
 
 
