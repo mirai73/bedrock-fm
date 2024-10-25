@@ -6,10 +6,10 @@ fm = TitanImageConditionedGeneration.from_id(Model.AMAZON_TITAN_IMAGE_GENERATOR_
 
 
 def test_args():
-    b = fm.get_body([("hello", 1)], 512, 512, 0)
+    b = fm.get_body([("fruits", 1)], 512, 512, 0)
     assert json.loads(b) == {
         "taskType": "TEXT_IMAGE",
-        "textToImageParams": {"text": "hello"},
+        "textToImageParams": {"text": "fruits"},
         "imageGenerationConfig": {
             "cfgScale": 7.0,
             "height": 512,
@@ -22,7 +22,7 @@ def test_args():
 
 def test_gen():
     r = fm.generate(
-        "hello",
+        "animals",
         512,
         512,
         0,

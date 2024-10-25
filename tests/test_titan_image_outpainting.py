@@ -4,10 +4,12 @@ from PIL import Image
 
 fm = TitanImageOutPainting.from_id(Model.AMAZON_TITAN_IMAGE_GENERATOR_V1)
 
+im = Image.open("tests/test_image.png")
+
 
 def test_args():
     b = fm.get_body(
-        [("hello", 1)],
+        [("fruits", 1)],
         512,
         512,
         0,
@@ -28,20 +30,20 @@ def test_args():
         "numberOfImages": 1,
         "seed": 0,
     }
-    assert b_obj["outPaintingParams"]["text"] == "hello"
+    assert b_obj["outPaintingParams"]["text"] == "fruits"
     assert "image" in b_obj["outPaintingParams"]
     assert b_obj["outPaintingParams"]["maskPrompt"] == "pears"
 
 
 def test_gen():
     r = fm.generate(
-        "cats",
+        "animals",
         512,
         512,
         0,
-        image=Image.new(mode="RGB", size=(512, 512)),
+        image=im,
         negative_prompt="dogs",
-        mask_prompt="black",
+        mask_prompt="birds",
         number_of_images=1,
     )
     assert type(r) == list

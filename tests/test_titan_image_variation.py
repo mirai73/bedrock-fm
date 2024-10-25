@@ -7,7 +7,7 @@ fm = TitanImageVariation.from_id(Model.AMAZON_TITAN_IMAGE_GENERATOR_V1)
 
 def test_args():
     b = fm.get_body(
-        [("hello", 1)],
+        [("fruits", 1)],
         512,
         512,
         0,
@@ -27,8 +27,11 @@ def test_args():
         "numberOfImages": 1,
         "seed": 0,
     }
-    assert b_obj["imageVariationParams"]["text"] == "hello"
+    assert b_obj["imageVariationParams"]["text"] == "fruits"
     assert "images" in b_obj["imageVariationParams"]
+
+
+im = Image.open("tests/test_image.png")
 
 
 def test_gen():
@@ -37,7 +40,7 @@ def test_gen():
         512,
         512,
         0,
-        images=[Image.new(mode="RGB", size=(512, 512))],
+        images=[im],
         negative_prompt="dogs",
         number_of_images=1,
     )
