@@ -1,3 +1,4 @@
+from bedrock_fm.bedrock import Assistant, Human, System, MessageRole
 from .bedrock import BedrockFoundationModel, CompletionDetails, StreamDetails
 from .exceptions import BedrockExtraArgsError
 import json
@@ -12,7 +13,7 @@ class Penalty:
     """Penalty object"""
 
     scale: int
-    apply_to_whitespaces:bool = field(default=False)
+    apply_to_whitespaces: bool = field(default=False)
     apply_to_punctuations: bool = field(default=False)
     apply_to_numbers: bool = field(default=False)
     apply_to_stopwords: bool = field(default=False)
@@ -118,8 +119,7 @@ class Jurassic(BedrockFoundationModel):
         presence_penalty: PresencePenalty,
         details: Literal[False],
         stream: Literal[False],
-    ) -> List[str]:
-        ...
+    ) -> List[str]: ...
 
     @overload
     def generate(
@@ -135,8 +135,7 @@ class Jurassic(BedrockFoundationModel):
         presence_penalty: PresencePenalty,
         details: Literal[True],
         stream: Literal[False],
-    ) -> CompletionDetails:
-        ...
+    ) -> CompletionDetails: ...
 
     @overload
     def generate(
@@ -152,8 +151,7 @@ class Jurassic(BedrockFoundationModel):
         presence_penalty: PresencePenalty,
         details: Literal[False],
         stream: Literal[True],
-    ) -> Iterable[str]:
-        ...
+    ) -> Iterable[str]: ...
 
     @overload
     def generate(
@@ -169,8 +167,7 @@ class Jurassic(BedrockFoundationModel):
         presence_penalty: PresencePenalty,
         details: Literal[True],
         stream: Literal[True],
-    ) -> StreamDetails:
-        ...
+    ) -> StreamDetails: ...
 
     def generate(
         self,
@@ -232,3 +229,73 @@ class Jurassic(BedrockFoundationModel):
 
     def get_text(self, body: Dict[str, Any]) -> str:
         return body["data"]["text"]
+
+
+@define
+class Jamba(BedrockFoundationModel):
+    """AI21 offers Jamba-1.5, state-of-the-art LLMs that enable developers and businesses to build their
+    own generative AI-driven applications and services. Jamba-1.5 models power language generation and comprehension features
+    in thousands of live applications, including long and short-form text generation, contextual question answering, creative writing,
+    summarization, and classification. The models are designed to follow natural language instructions and context without
+    requiring examples (zero-shot) and are trained on a massive corpus of web text with recent data updated to mid-2022.
+    In addition to English, Jamba-1.5 supports six other languages: Spanish, French, German, Italian, Portuguese, and Dutch.
+    """
+
+    @classmethod
+    def family(cls) -> str:
+        return "ai21.jamba"
+
+    def validate_extra_args(self, extra_args: Dict[str, Any]):
+        unsupp_args = []
+        for k in extra_args.keys():
+            if not k in ["response_format", "n", "documents"]:
+                unsupp_args.append(k)
+
+        if len(unsupp_args) > 0:
+            raise BedrockExtraArgsError(
+                f"Arguments [{','.join(unsupp_args)}] are not supported by this model"
+            )
+
+    def get_body(
+        self,
+        prompt: str,
+        top_p: float,
+        temperature: float,
+        max_token_count: int,
+        stop_sequences: List[str],
+        extra_args: Dict[str, Any],
+        stream: bool,
+    ) -> str:
+        body = extra_args.copy()
+        m = prompt
+        if type(prompt) == str:
+            m = [{"role": "user", "content": prompt}]
+        body.update(
+            {
+                "messages": m,
+                "max_tokens": max_token_count,
+                "stop": stop_sequences,
+                "temperature": temperature,
+                "stream": stream,
+            }
+        )
+        return json.dumps(body)
+
+    def get_chat_prompt(
+        self, conversation: List[Human | Assistant | System]
+    ) -> str | List:
+        messages = []
+        for m in conversation:
+            if m.role == MessageRole.HUMAN:
+                messages.append({"role": "user", "content": m.content})
+            if m.role == MessageRole.ASSISTANT:
+                messages.append({"role": "assistant", "content": m.content})
+            if m.role == MessageRole.SYSTEM:
+                messages.append({"role": "system", "content": m.content})
+        return messages
+
+    def process_response_body(self, body: Dict[str, Any]) -> List[str]:
+        return [self.get_text(r) for r in body["choices"]]
+
+    def get_text(self, body: Dict[str, Any]) -> str:
+        return body["message"]["content"]

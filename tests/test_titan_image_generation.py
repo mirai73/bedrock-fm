@@ -22,7 +22,7 @@ def test_args():
 
 def test_gen():
     r = fm.generate(
-        [("hello", 1)], 512, 512, 0, negative_prompt="dogs", number_of_images=2
+        [("animals", 1)], 512, 512, 0, negative_prompt="dogs", number_of_images=2
     )
     assert type(r) == list
     assert len(r) == 2

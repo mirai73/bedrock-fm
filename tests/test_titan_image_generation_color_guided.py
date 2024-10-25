@@ -6,12 +6,12 @@ fm = TitanImageColorGuidedContent.from_id(Model.AMAZON_TITAN_IMAGE_GENERATOR_V2_
 
 
 def test_args():
-    b = fm.get_body([("hello", 1)], 512, 512, 0, colors=["#ff8080", "#ffb280"])
+    b = fm.get_body([("fruits", 1)], 512, 512, 0, colors=["#ff8080", "#ffb280"])
     assert json.loads(b) == {
         "taskType": "COLOR_GUIDED_GENERATION",
         "colorGuidedGenerationParams": {
             "colors": ["#ff8080", "#ffb280"],
-            "text": "hello",
+            "text": "fruits",
         },
         "imageGenerationConfig": {
             "cfgScale": 7.0,
@@ -23,15 +23,17 @@ def test_args():
     }
 
 
+im = Image.open("tests/test_image.png")
+
+
 def test_gen():
     r = fm.generate(
-        "hello",
+        "tropical animals in the forest",
         512,
         512,
         0,
-        negative_prompt="dogs",
-        number_of_images=2,
-        reference_image=Image.new("RGB", (512, 512)),
+        number_of_images=1,
+        reference_image=im,
         colors=["#ff8080", "#ffb280"],
     )
     assert type(r) == list

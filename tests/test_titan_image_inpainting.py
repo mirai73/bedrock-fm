@@ -7,7 +7,7 @@ fm = TitanImageInPainting.from_id(Model.AMAZON_TITAN_IMAGE_GENERATOR_V1)
 
 def test_args():
     b = fm.get_body(
-        [("hello", 1)],
+        [("fruits", 1)],
         512,
         512,
         0,
@@ -28,21 +28,24 @@ def test_args():
         "numberOfImages": 1,
         "seed": 0,
     }
-    assert b_obj["inPaintingParams"]["text"] == "hello"
+    assert b_obj["inPaintingParams"]["text"] == "fruits"
     assert "image" in b_obj["inPaintingParams"]
     assert b_obj["inPaintingParams"]["maskPrompt"] == "pears"
 
 
+im = Image.open("tests/test_image.png")
+
+
 def test_gen():
     r = fm.generate(
-        "cats",
+        "animals",
         512,
         512,
         0,
-        image=Image.new("RGB", (512, 512)),
+        image=im,
         negative_prompt="dogs",
         number_of_images=1,
-        mask_prompt="black",
+        mask_prompt="birds",
     )
     assert type(r) == list
     assert len(r) == 1

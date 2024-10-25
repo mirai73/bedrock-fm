@@ -27,13 +27,16 @@ def test_args():
     }
 
 
+im = Image.open("tests/test_image.png")
+
+
 def test_gen():
     r = fm.generate(
-        "hello",
+        "a cat bathing in the sun",
         512,
         512,
         0,
-        image=Image.new("RGB", (512, 512)),
+        image=im,
     )
     assert type(r) == list
     assert len(r) == 1
