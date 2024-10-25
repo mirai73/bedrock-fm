@@ -79,6 +79,11 @@ class System(Message):
     role: MessageRole = field(default=MessageRole.SYSTEM)
 
 
+class InstanceProfile(Enum):
+    US = "us."
+    EU = "eu."
+
+
 @define(kw_only=True)
 class BedrockFoundationModel:
     """Abstract class for all foundation models exposed via Bedrock.
@@ -136,7 +141,7 @@ class BedrockFoundationModel:
         ),
         kw_only=True,
     )
-    """Instance of the Bedrock data plane client to use. By default it created one using the session"""
+    """Instance of the Bedrock data plane client to use. By default it creates one using the session"""
 
     _client_ops: Any = field(
         default=Factory(
@@ -145,9 +150,12 @@ class BedrockFoundationModel:
         ),
         kw_only=True,
     )
-    """Instance of the Bedrock control plane client to use. By default it created one using the session"""
+    """Instance of the Bedrock control plane client to use. By default it creates one using the session"""
 
     _model_id: str = field(default=None)
+    """The modelId"""
+
+    instance_profile: Optional[InstanceProfile] = field(default=None)
 
     @classmethod
     def _validate_model_id(cls, model_id: str) -> bool:
@@ -300,17 +308,20 @@ class BedrockFoundationModel:
         )
         logger.debug(f"Body= {body}")
         t = time.time()
+        mid = self._model_id
+        if self.instance_profile is not None:
+            mid = self.instance_profile.value + mid
         try:
             if stream:
                 resp = self._client.invoke_model_with_response_stream(
-                    modelId=self._model_id,
+                    modelId=mid,
                     body=body,
                     contentType=CONTENT_TYPE_APPLICATION_JSON,
                     accept="*/*",
                 )
             else:
                 resp = self._client.invoke_model(
-                    modelId=self._model_id,
+                    modelId=mid,
                     body=body,
                     contentType=CONTENT_TYPE_APPLICATION_JSON,
                     accept="*/*",
