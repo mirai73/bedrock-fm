@@ -2,6 +2,7 @@ from bedrock_fm import (
     Llama3Instruct,
     Model,
     CompletionDetails,
+    InstanceProfile,
     Model,
     Human,
     System,
@@ -11,7 +12,9 @@ from bedrock_fm.exceptions import BedrockExtraArgsError, BedrockInvocationError
 import pytest
 import json
 
-fm = Llama3Instruct.from_id(Model.META_LLAMA3_8B_INSTRUCT_V1_0)
+fm = Llama3Instruct.from_id(
+    Model.META_LLAMA3_2_1B_INSTRUCT_V1_0, instance_profile=InstanceProfile.US
+)
 
 
 def test_args():

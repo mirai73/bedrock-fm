@@ -31,6 +31,7 @@ from .bedrock import (
     BedrockFoundationModel,
     BedrockEmbeddingsModel,
     EmbeddingType,
+    InstanceProfile,
 )
 from .bedrock_image import BedrockImageModel
 from attrs import field
@@ -74,6 +75,7 @@ __all__ = [
     "Assistant",
     "System",
     "EmbeddingType",
+    "InstanceProfile",
 ]
 
 
